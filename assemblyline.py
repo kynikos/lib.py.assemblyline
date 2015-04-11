@@ -67,9 +67,9 @@ class Factory:
 
         :param int workersN: The maximum number of workers (threads) that work
             in the factory.
-        :param dict stationsdata: A dictionary mapping the station names to
-            a sequence with the 3 values for the `process`, `inputname` and
-            `outputnames` parameters described in :py:meth:`_Station.__init__`.
+        :param tuple stationsdata: A sequence of 3-tuples, each with the values
+            for the `process`, `inputname` and `outputnames` parameters
+            described in :py:meth:`_Station.__init__`.
         """
         self.workers = threading.Semaphore(value=workersN)
         self.started = False
@@ -81,8 +81,8 @@ class Factory:
         #       parameters
         self.begin_stations = []
         self.inputname_to_station = {}
-        for sname in stationsdata:
-            process, inputname, outputnames = stationsdata[sname]
+        for stationdata in stationsdata:
+            process, inputname, outputnames = stationdata
             station = _Station(self.workers, self.queue,
                                self.inputname_to_station, process, inputname,
                                outputnames)
