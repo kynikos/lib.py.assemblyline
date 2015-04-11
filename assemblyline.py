@@ -61,19 +61,17 @@ class Factory:
     """
     The only class that must be instantiated, representing the whole factory.
     """
-    def __init__(self, workersN, begin_inputs, stationsdata):
+    def __init__(self, workersN, stationsdata):
         """
         Constructor: instantiate a :py:class:`Factory` object.
 
         :param int workersN: The maximum number of workers (threads) that work
             in the factory.
-        :param dict begin_inputs: A dictionary mapping the global input names
-            to sequences of objects representing the items for each input.
         :param dict stationsdata: A dictionary mapping the station names to
-            the parameters for :py:meth:`_Station.__init__`.
+            a sequence with the 3 values for the `process`, `inputname` and
+            `outputnames` parameters described in :py:meth:`_Station.__init__`.
         """
         self.workers = threading.Semaphore(value=workersN)
-        self.begin_inputs = begin_inputs
         self.started = False
         self.queue = queue.Queue()
 
@@ -81,17 +79,20 @@ class Factory:
         #       each other
         #       Also validate the values of the various configuration
         #       parameters
-        self.stations = {}
+        self.begin_stations = []
         self.inputname_to_station = {}
         for sname in stationsdata:
             process, inputname, outputnames = stationsdata[sname]
             station = _Station(self.workers, self.queue,
                                self.inputname_to_station, process, inputname,
                                outputnames)
-            if inputname in self.inputname_to_station:
-                # TODO: Use a proper exception
-                raise UserWarning()
-            self.inputname_to_station[inputname] = station
+            if inputname:
+                if inputname in self.inputname_to_station:
+                    # TODO: Use a proper exception
+                    raise UserWarning()
+                self.inputname_to_station[inputname] = station
+            else:
+                self.begin_stations.append(station)
 
     def begin(self):
         """
@@ -111,10 +112,8 @@ class Factory:
         return self._recurse_queue()
 
     def _feed_queue(self):
-        for iname in self.begin_inputs:
-            station = self.inputname_to_station[iname]
-            for item in self.begin_inputs[iname]:
-                self.queue.put((station, item))
+        for station in self.begin_stations:
+            self.queue.put((station, None))
         self.workers.release()
 
     def _recurse_queue(self):
