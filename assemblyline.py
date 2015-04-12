@@ -61,6 +61,8 @@ class Factory:
     """
     The only class that must be instantiated, representing the whole factory.
     """
+    END_TIMEOUT = 0.25
+
     def __init__(self, workersN, stationsdata):
         """
         Constructor: instantiate a :py:class:`Factory` object.
@@ -125,7 +127,7 @@ class Factory:
         # same thread: that would greatly simplify the code, but it would be
         # less flexible with stations that output multiple products
         try:
-            station, item = self.queue.get(timeout=1)
+            station, item = self.queue.get(timeout=self.END_TIMEOUT)
         except queue.Empty:
             # Just checking len(self.queue) wouldn't be enough, because there
             # can be moments when the queue is empty because all the items are
