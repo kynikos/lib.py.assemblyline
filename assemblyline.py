@@ -50,10 +50,12 @@ Module contents
 import threading
 import queue
 
+# TODO: Implement "combiners" or "aggregators" to receive multiple inputs and
+#       feed proper combinations to stations
+# TODO: Probably returning the products through events instead of yielding
+#       them would be more flexible also simplifying the code
+# TODO: Add a comparison with a more standard event manager
 # TODO: Add example in documentation
-# TODO: Make sure exceptions in threads are raised and their traceback output
-# TODO: Implement "combiners" to receive multiple inputs and feed proper
-#       combinations to stations
 # TODO: Add tests
 
 
@@ -73,6 +75,8 @@ class Factory:
             for the `process`, `inputname` and `outputnames` parameters
             described in :py:meth:`_Station.__init__`.
         """
+        # TODO: Allow sharing the semaphore with other Factory instances or
+        #       generic external asynchronous event dispatchers
         self.workers = threading.Semaphore(value=workersN)
         self.started = False
         self.queue = queue.Queue()
@@ -139,6 +143,8 @@ class Factory:
                 return True
         self.workers.acquire()
         thread = threading.Thread(target=station.process_item, args=(item, ))
+        # TODO: Make sure exceptions in threads are raised and their traceback
+        #       output
         # TODO: Name the thread with the task name + worker number
         thread.start()
         return self._recurse_queue()
